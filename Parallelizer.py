@@ -32,20 +32,17 @@ def make_parallel(func):
             # Here we are avoiding creating unnecessary threads
             number_of_workers = len(lst)
 
-        if number_of_workers:
-            if number_of_workers == 1:
-                # If the length of the list that needs to be parallelized is 1, there is no point in
-                # parallelizing the function.
-                # So we run it serially.
-                result = [func(lst[0])]
-            else:
-                # Core Code, where we are creating max number of threads and running the decorated function in parallel.
-                result = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers=number_of_workers) as executer:
-                    bag = {executer.submit(func, i): i for i in lst}
-                    for future in concurrent.futures.as_completed(bag):
-                        result.append(future.result())
-        else:
-            result = []
-        return result
+        if number_of_workers == 0:
+            return []
+
+        if number_of_workers == 1:
+            # If the length of the list that needs to be parallelized is 1, there is no point in
+            # parallelizing the function.
+            # So we run it serially.
+            return [func(lst[0])]
+
+        # Core Code, where we are creating max number of threads and running the decorated function in parallel.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=number_of_workers) as executer:
+            return list(executer.map(func, lst))
+
     return wrapper
